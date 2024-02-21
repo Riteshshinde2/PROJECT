@@ -1,0 +1,102 @@
+--list of top 10 orders
+
+
+select top 10*
+from EachOrderBreakdown
+order by Sales desc
+
+--number of orders in each category
+
+select category ,COUNT(*) as NumberOfOrders
+from EachOrderBreakdown
+group by category
+
+
+--total profit in each subcategory
+
+
+select SubCategory ,sum (Profit) as profit
+from EachOrderBreakdown
+group by SubCategory
+
+
+--highest sales done
+
+select top 1 CustomerName ,sum (sales) as totalsales
+from EachOrderBreakdown as ob
+join OrdersList as ol
+on  ob.OrderID=ol.OrderID
+group by CustomerName
+order by totalsales desc
+
+
+---finding month with highest average sales
+
+select top 1 MONTH(OrderDate) as month ,AVg(sales) as averagesales
+from EachOrderBreakdown as ob
+join OrdersList as ol
+on  ob.OrderID=ol.OrderID
+group by month(OrderDate)
+order by averagesales desc
+
+
+--average quantity ordered by costumer whose name start with s
+
+select avg(quantity) as averagequantity
+from EachOrderBreakdown as ob
+join OrdersList as ol
+on  ob.OrderID=ol.OrderID
+where LEFT(customername,1)='s'
+
+
+--total costumer who were acquire in 2014
+
+select count(*) as NoOfCostumer from (
+select CustomerName, min(OrderDate) as firstOrderDate
+from OrdersList
+group by customerName
+having year(min(orderDate)) ='2014')  as CustomerWithFirstOrder2014
+
+
+
+
+--percentage of contribution by each category in total profit
+
+
+select subcategory , sum(profit) as totalprofit,
+sum(profit)*100/(select sum(profit) from EachOrderBreakdown) as percentageOfTotalContribution
+from eachorderbreakdown 
+group by subcategory
+
+--average sales per customer who has done more than 1 sales
+
+with customerAvgSales as  (
+select CustomerName,COUNT(distinct ol.OrderID) as NoOfOrders , avg(sales) as averageSales
+from EachOrderBreakdown as ob
+join OrdersList as ol
+on  ob.OrderID=ol.OrderID
+group by CustomerName
+)
+ select customerName ,averagesales,Nooforders
+ from customerAvgSales
+ where Nooforders>1
+
+
+ --top performing subcategory in each category based on total sales
+
+ with topsubcategory as (
+ select category ,subcategory , sum(sales) as totalsales,
+ rank() over(partition by category order by sum(sales)desc) as subcategoryrank
+ from EachOrderBreakdown
+ group by category,SubCategory
+ )
+ select *
+ from topsubcategory
+ where subcategoryrank=1
+
+
+
+select  *
+from OrdersList
+select *
+from EachOrderBreakdown

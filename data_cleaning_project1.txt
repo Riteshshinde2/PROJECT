@@ -1,0 +1,92 @@
+--select * 
+--from fn_helpcollations()
+--WHERE NAME =(SELECT SERVERPROPERTY ('COLLATION'))
+
+
+--lets establish relation between two tables
+
+alter table orderslist
+alter column orderID nvarchar(255) not null
+
+alter table orderslist
+add constraint pk_orderID primary key (orderID)
+
+alter table EachOrderBreakdown
+alter column orderID nvarchar(255) not null
+
+
+alter table EachOrderBreakdown
+add constraint fk_orderID  foreign key (OrderID) references orderslist(orderID)
+
+
+--lets saperate city state country
+
+
+alter table OrdersList
+add city nvarchar(255) ,
+state nvarchar(255),
+country nvarchar(255)
+
+
+update orderslist
+ set city = parsename(replace([city state country],',','.'),3),
+     state = parsename(replace([city state country],',','.'),2),
+     country = parsename(replace([city state country],',','.'),1);
+
+
+
+--now delete column [city state country]
+
+alter table orderslist
+drop column[city state country]
+
+
+
+
+----adding new category column using dirst 3 digit in product name column
+--where 
+-- fur = furniture
+-- ofs = office supplies 
+--  tec =technology
+
+alter table eachorderbreakdown
+ add category nvarchAR(255)
+
+
+
+  UPDATE  eachorderbreakdown 
+ set category = case when left(productName,3) = 'OFS' then 'office supplies' 
+                    when left(productName,3) = 'tec' then 'technology' 
+                    when left(productName,3) = 'fur' then  'furniture' 
+					end;
+
+--delete the f0ur charector
+
+
+
+update eachorderbreakdown
+set productName =SUBSTRING(productName,5,LEN(productName)-4)   
+
+
+SELECT * FROM EachOrderBreakdown
+
+
+--lets remove dublicates
+
+WITH CTE AS (
+select * ,row_Number() over(partition by orderID,ProductName,Discount,Sales,Profit,
+           quantity,Subcategory,category order by orderID)as dublicates
+		   from  EachOrderBreakdown
+)
+DELETE FROM CTE 
+WHERE DUBLICATES>1
+
+
+
+SELECT * FROM OrdersList
+
+
+alter table Orderslist
+drop column Orderpriority
+
+
